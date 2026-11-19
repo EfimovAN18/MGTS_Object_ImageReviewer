@@ -9,5 +9,5 @@ data/cls/
 data/autolabel_preview/
 runs/
 *.pt
-!models/.gitkeep
+!models/*.pt
 outputs/
