@@ -121,11 +121,14 @@ uvicorn app.api:app --port 8000      # документация: http://localhos
 ```json
 {
   "status": "Не исправен",
+  "status_code": "damaged",
+  "needs_attention": true,
   "message": null,
   "quality": {"ok": true, "issues": [], "sharpness": 412.5, "brightness": 118.3},
   "objects": [
     {"object_type": "manhole", "object_name": "Колодец", "det_conf": 0.91,
-     "bbox": [412, 530, 590, 640], "status": "Не исправен", "damage_prob": 0.87}
+     "bbox": [412, 530, 590, 640], "status": "Не исправен", "status_code": "damaged",
+     "is_damaged": true, "damage_prob": 0.87}
   ],
   "image_b64": "..."
 }

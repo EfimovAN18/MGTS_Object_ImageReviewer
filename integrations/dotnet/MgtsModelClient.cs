@@ -11,8 +11,10 @@ public record DetectedObject(
     string ObjectName,      // Колодец | Опора
     double DetConf,         // уверенность детектора
     int[] Bbox,             // [x1, y1, x2, y2] в пикселях
-    string Status,          // Исправен | Не исправен | Требует проверки | Не определено
-    double? DamageProb);    // вероятность поломки (null, если состояние не оценивалось)
+    string Status,          // текст для показа: Исправен | Не исправен | Требует проверки | Не определено
+    string StatusCode,      // для логики: ok | damaged | check | unknown
+    bool IsDamaged,         // true — объект неисправен
+    double? DamageProb);    // вероятность поломки 0..1 (null, если состояние не оценивалось)
 
 public record ImageQuality(
     bool Ok,                    // false — снимок плохой
@@ -21,7 +23,9 @@ public record ImageQuality(
     double Brightness);
 
 public record FrameResult(
-    string Status,              // Исправен | Не исправен | Требует проверки | Объекты не найдены | Плохое качество снимка
+    string Status,              // текст для показа: Исправен | Не исправен | Требует проверки | Объекты не найдены | Плохое качество снимка
+    string StatusCode,          // для логики: ok | damaged | check | unknown | no_objects | bad_photo
+    bool NeedsAttention,        // true — нужна проверка или ремонт (damaged / check / bad_photo)
     string? Message,            // пояснение для пользователя (например, «Переснимите объект»)
     double? TimestampS,         // секунда видео (для видео/трансляции)
     ImageQuality? Quality,

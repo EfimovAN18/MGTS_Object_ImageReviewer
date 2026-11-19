@@ -47,6 +47,11 @@ def check_quality(img: np.ndarray) -> dict:
         issues.append("слишком низкое разрешение")
     return {"ok": not issues, "issues": issues,
             "sharpness": round(blur, 1), "brightness": round(bright, 1)}
+# Машиночитаемые коды статусов (для бэкенда — не сравнивать русские строки)
+STATUS_CODE = {STATUS_OK: "ok", STATUS_BAD: "damaged", STATUS_CHECK: "check",
+               STATUS_UNKNOWN: "unknown", STATUS_BAD_PHOTO: "bad_photo", STATUS_NOTHING: "no_objects"}
+NEEDS_ATTENTION = {STATUS_BAD, STATUS_CHECK, STATUS_BAD_PHOTO}
+
 _SEVERITY = {STATUS_BAD: 3, STATUS_CHECK: 2, STATUS_UNKNOWN: 1, STATUS_OK: 0}
 OBJ_RU = {"manhole": "Колодец", "pole": "Опора"}
 # цвета BGR: зелёный / красный / жёлтый / серый
@@ -74,8 +79,17 @@ class FrameResult:
     message: str | None = None   # пояснение для пользователя
 
     def to_dict(self):
-        return {"status": self.status, "message": self.message, "timestamp_s": self.timestamp_s,
-                "quality": self.quality, "objects": [asdict(o) for o in self.objects]}
+        objs = []
+        for o in self.objects:
+            d = asdict(o)
+            d["status_code"] = STATUS_CODE.get(o.status, "unknown")
+            d["is_damaged"] = o.status == STATUS_BAD
+            objs.append(d)
+        return {"status": self.status,
+                "status_code": STATUS_CODE.get(self.status, "unknown"),
+                "needs_attention": self.status in NEEDS_ATTENTION,
+                "message": self.message, "timestamp_s": self.timestamp_s,
+                "quality": self.quality, "objects": objs}
 
 
 class Inspector:
