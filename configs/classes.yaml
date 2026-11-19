@@ -1,0 +1,22 @@
+# Единая схема классов.
+# Детектор находит ТИП объекта, классификатор — его СОСТОЯНИЕ.
+detector:
+  0: manhole   # кабельный колодец / люк
+  1: pole      # опора
+
+classifier:
+  - ok        # исправен
+  - damaged   # не исправен
+
+# Ключевые слова для сведения чужих названий классов к нашим.
+# Проверяются в порядке: сначала состояние "ok" (чтобы "not broken" не стал "broken").
+keywords:
+  manhole: [manhole, well, hatch, cover, lid, sewer, "люк", "колод"]
+  pole: [pole, post, mast, tower, "опор", "столб"]
+  ok: [not broken, notbroken, not_broken, good, normal, intact, ok, "исправ"]
+  damaged: [broken, damage, crack, missing, lost, open, uncover, defect, bad, sunken, down, tilt, lean, rust, "слом", "поврежд", "неиспр", "открыт"]
+
+# Промпты для авторазметки Grounding DINO (английский работает лучше).
+autolabel_prompts:
+  manhole: "manhole cover"
+  pole: "utility pole"
