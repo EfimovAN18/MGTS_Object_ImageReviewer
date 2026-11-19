@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../.gitignore" />
+  </Folder>
+  <Project Path="Broker.Application/Broker.Application.csproj" />
+  <Project Path="Broker.Infrastructure.PostgreSQL/Broker.Infrastructure.PostgreSQL.csproj" />
+  <Project Path="Broker.Model/Broker.Model.csproj" />
+  <Project Path="Broker/Broker.csproj" />
+</Solution>

@@ -42,7 +42,8 @@ scripts/03_train_detector.py      обучение детектора YOLO11
 scripts/04_train_classifier.py    обучение классификатора состояния
 src/inspector.py             пайплайн: изображение / видео / трансляция
 src/cli.py                   запуск из консоли
-app/api.py                   HTTP API для сайта (FastAPI)
+app/api.py                   HTTP API нейросети (FastAPI)
+Appilcation/                 бэкенд ASP.NET Core 10 + PostgreSQL (Broker)
 models/                      сюда сохраняются detector.pt и classifier.pt
 ```
 
@@ -144,6 +145,23 @@ Colab, GPU T4. Детектор YOLO11s обучался 25 эпох, класс
 | Классификатор состояния люков | top-1 accuracy = 0.90 |
 
 Ограничение: в открытых данных метки состояния есть только у люков, поэтому состояние опор пока не оценивается (статус «Не определено»). Чтобы оценивать опоры, нужно добавить свой датасет через `02_autolabel.py`.
+
+## Бэкенд (Appilcation/)
+
+ASP.NET Core 10 + PostgreSQL. Принимает фото и видео, ставит их в очередь, фоновый обработчик отправляет файлы в нейросеть (`app/api.py`), результат и кадры с рамками сохраняются.
+
+```
+uvicorn app.api:app --port 8000      # нейросеть
+cd Appilcation/Broker && dotnet run  # бэкенд, swagger: http://localhost:5226/swagger
+```
+
+| Метод | Что делает |
+|---|---|
+| `POST /api/files/upload` (form-data `formFile`) | Загрузка фото/видео → `202` + id |
+| `GET /api/files/upload/{id}` | Статус (`Pending` / `Processing` / `Ok` / `HasProblems` / `Failed`), объекты, ссылки на кадры |
+| `GET /api/files/{id}/frames/{n}` | Кадр с рамками |
+| `POST /api/stream/frame` | Трансляция: один кадр, ответ сразу |
+| `GET /api/model/health` | Доступна ли нейросеть |
 
 ## Метрики
 

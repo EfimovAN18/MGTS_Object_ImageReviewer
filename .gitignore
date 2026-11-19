@@ -11,3 +11,10 @@ runs/
 *.pt
 !models/*.pt
 outputs/
+
+# .NET
+bin/
+obj/
+.vs/
+*.user
+Appilcation/Broker/static/
