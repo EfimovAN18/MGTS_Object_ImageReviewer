@@ -20,7 +20,7 @@ from tqdm import tqdm
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from src.classes import DET_IDS, guess_dataset_object, map_class  # noqa: E402
+from src.classes import DET_IDS, guess_dataset_object, is_ignored, map_class  # noqa: E402
 
 RAW = ROOT / "data" / "raw" / "roboflow"
 DET = ROOT / "data" / "det"
@@ -70,6 +70,9 @@ def convert(ds_dir: Path, slug: str, stats: dict):
     default_obj = guess_dataset_object(slug, names)
     mapping = {}
     for i, n in enumerate(names):
+        if is_ignored(n):
+            mapping[i] = (None, None)
+            continue
         obj, state = map_class(n)
         mapping[i] = (obj or default_obj, state)
     print(f"  классы {slug}: " + ", ".join(f"{n}->{mapping[i]}" for i, n in enumerate(names)))

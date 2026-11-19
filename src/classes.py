@@ -22,6 +22,10 @@ def _norm(s: str) -> str:
     return re.sub(r"[-_/.]+", " ", s.lower())
 
 
+def is_ignored(name: str) -> bool:
+    return _has(_norm(name), CFG.get("ignore", []))
+
+
 def map_class(name: str):
     """Чужое имя класса -> (тип объекта | None, состояние | None).
 

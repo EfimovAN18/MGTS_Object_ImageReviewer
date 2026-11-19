@@ -14,7 +14,10 @@ keywords:
   manhole: [manhole, well, hatch, cover, lid, sewer, "люк", "колод"]
   pole: [pole, post, mast, tower, "опор", "столб"]
   ok: [not broken, notbroken, not_broken, good, normal, intact, ok, "исправ"]
-  damaged: [broken, damage, crack, missing, lost, open, uncover, defect, bad, sunken, down, tilt, lean, rust, "слом", "поврежд", "неиспр", "открыт"]
+  damaged: [broken, lose, damage, crack, missing, lost, open, uncover, defect, bad, sunken, down, tilt, lean, rust, "слом", "поврежд", "неиспр", "открыт"]
+
+# Классы, которые не берём вовсе (бирки, «прочее» и т.п.).
+ignore: [tag, other, sign, background, null]
 
 # Промпты для авторазметки Grounding DINO (английский работает лучше).
 autolabel_prompts:
