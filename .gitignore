@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+data/raw/
+data/det/
+data/cls/
+data/autolabel_preview/
+runs/
+*.pt
+!models/*.pt
+outputs/

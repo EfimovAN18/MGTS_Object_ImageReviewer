@@ -1,0 +1,14 @@
+# Открытые датасеты Roboflow Universe (workspace/project).
+# Скрипт scripts/01_download_datasets.py скачает последнюю версию каждого
+# в формате YOLOv8 и сведёт классы к единой схеме (см. configs/classes.yaml).
+# Если какой-то датасет удалён или переименован — скрипт его пропустит.
+roboflow:
+  # --- колодцы / люки (есть классы состояния: broken / not broken и т.п.)
+  - 2nd-workspace/manhole-broken
+  - manhole-cover-detection/manhole-cover-detection-dslmf
+  - create-dataset-for-yolo/manhole-cover-dataset-yolo
+  # --- опоры
+  - dy-cfoxw/utility_pole
+  - ghost-gsj7h/utility-pole-aka9k
+  - yue-hung/utility-pole-5j6dp
+  - ladlisahu-veflx/pole-detection-qqnax
