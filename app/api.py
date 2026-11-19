@@ -59,7 +59,7 @@ async def analyze_video(file: UploadFile = File(...), interval: float = Form(5.0
                   for r, a in inspector.analyze_video(path, interval)]
     finally:
         Path(path).unlink(missing_ok=True)
-    attention = [f for f in frames if f["status"] in ("Не исправен", "Требует проверки")]
+    attention = [f for f in frames if f["status"] in ("Не исправен", "Требует проверки", "Плохое качество снимка")]
     return {"frames": frames, "total": len(frames), "need_attention": len(attention)}
 
 

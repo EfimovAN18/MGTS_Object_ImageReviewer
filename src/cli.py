@@ -51,7 +51,7 @@ def main():
         print(f"{t}{res.status} | {objs}")
 
     (out_dir / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    bad = [r for r in report if r["status"] in ("Не исправен", "Требует проверки")]
+    bad = [r for r in report if r["status"] in ("Не исправен", "Требует проверки", "Плохое качество снимка")]
     print(f"\nКадров: {len(report)}, требуют внимания: {len(bad)}. Результаты: {out_dir}")
 
 

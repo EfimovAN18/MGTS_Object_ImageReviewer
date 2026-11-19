@@ -14,9 +14,17 @@ public record DetectedObject(
     string Status,          // Исправен | Не исправен | Требует проверки | Не определено
     double? DamageProb);    // вероятность поломки (null, если состояние не оценивалось)
 
+public record ImageQuality(
+    bool Ok,                    // false — снимок плохой
+    List<string> Issues,        // "снимок размыт", "слишком темно", "снимок засвечен", "слишком низкое разрешение"
+    double Sharpness,
+    double Brightness);
+
 public record FrameResult(
-    string Status,              // итоговый статус кадра (худший из объектов)
+    string Status,              // Исправен | Не исправен | Требует проверки | Объекты не найдены | Плохое качество снимка
+    string? Message,            // пояснение для пользователя (например, «Переснимите объект»)
     double? TimestampS,         // секунда видео (для видео/трансляции)
+    ImageQuality? Quality,
     List<DetectedObject> Objects,
     string? ImageB64);          // JPEG с рамками в base64
 

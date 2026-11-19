@@ -18,6 +18,35 @@ STATUS_OK = "Исправен"
 STATUS_BAD = "Не исправен"
 STATUS_CHECK = "Требует проверки"
 STATUS_UNKNOWN = "Не определено"
+STATUS_BAD_PHOTO = "Плохое качество снимка"
+STATUS_NOTHING = "Объекты не найдены"
+
+# Пороги качества (подбираются на реальных снимках с камер)
+BLUR_MIN = 60.0          # дисперсия Лапласиана: меньше — снимок размыт
+DARK_MAX = 40.0          # средняя яркость: меньше — слишком темно
+BRIGHT_MIN = 225.0       # средняя яркость: больше — засвечен
+MIN_SIDE = 320           # px: меньше — слишком маленькое разрешение
+
+
+def check_quality(img: np.ndarray) -> dict:
+    """Быстрая проверка качества кадра до запуска нейросети."""
+    h, w = img.shape[:2]
+    scale = 640 / max(h, w)
+    small = cv2.resize(img, (int(w * scale), int(h * scale))) if scale < 1 else img
+    gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
+    blur = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+    bright = float(gray.mean())
+    issues = []
+    if blur < BLUR_MIN:
+        issues.append("снимок размыт")
+    if bright < DARK_MAX:
+        issues.append("слишком темно")
+    if bright > BRIGHT_MIN:
+        issues.append("снимок засвечен")
+    if min(h, w) < MIN_SIDE:
+        issues.append("слишком низкое разрешение")
+    return {"ok": not issues, "issues": issues,
+            "sharpness": round(blur, 1), "brightness": round(bright, 1)}
 _SEVERITY = {STATUS_BAD: 3, STATUS_CHECK: 2, STATUS_UNKNOWN: 1, STATUS_OK: 0}
 OBJ_RU = {"manhole": "Колодец", "pole": "Опора"}
 # цвета BGR: зелёный / красный / жёлтый / серый
@@ -41,10 +70,12 @@ class FrameResult:
     status: str
     objects: list = field(default_factory=list)
     timestamp_s: float | None = None
+    quality: dict | None = None
+    message: str | None = None   # пояснение для пользователя
 
     def to_dict(self):
-        return {"status": self.status, "timestamp_s": self.timestamp_s,
-                "objects": [asdict(o) for o in self.objects]}
+        return {"status": self.status, "message": self.message, "timestamp_s": self.timestamp_s,
+                "quality": self.quality, "objects": [asdict(o) for o in self.objects]}
 
 
 class Inspector:
@@ -70,6 +101,7 @@ class Inspector:
 
     # ---------- одно изображение ----------
     def analyze_image(self, img: np.ndarray, timestamp_s=None) -> tuple[FrameResult, np.ndarray]:
+        quality = check_quality(img)
         det = self.det.predict(img, conf=self.det_conf, device=self.device, verbose=False)[0]
         H, W = img.shape[:2]
         boxes = det.boxes.xyxy.cpu().numpy().astype(int) if len(det.boxes) else np.zeros((0, 4), int)
@@ -94,11 +126,27 @@ class Inspector:
             objects.append(DetectedObject(obj, OBJ_RU.get(obj, obj), round(conf, 3), bbox,
                                           self._status(p), None if p is None else round(p, 3)))
 
-        if not objects:
-            frame_status = "Объекты не найдены"
+        problems = ", ".join(quality["issues"])
+        if not objects and not quality["ok"]:
+            # ничего не нашли на плохом снимке — нельзя утверждать, что объектов нет
+            frame_status = STATUS_BAD_PHOTO
+            message = f"Не удалось проанализировать: {problems}. Переснимите объект."
+        elif not objects:
+            frame_status = STATUS_NOTHING
+            message = "На снимке не найдено колодцев и опор."
         else:
             frame_status = max((o.status for o in objects), key=_SEVERITY.get)
-        return FrameResult(frame_status, objects, timestamp_s), self.draw(img, objects)
+            message = None
+            if not quality["ok"]:
+                # объекты нашли, но снимок плохой — «Исправен» не доверяем
+                for o in objects:
+                    if o.status == STATUS_OK:
+                        o.status = STATUS_CHECK
+                if frame_status == STATUS_OK:
+                    frame_status = STATUS_CHECK
+                message = f"Качество снимка низкое ({problems}), результат требует проверки."
+        result = FrameResult(frame_status, objects, timestamp_s, quality, message)
+        return result, self.draw(img, objects)
 
     def _status(self, p_damaged):
         if p_damaged is None:
