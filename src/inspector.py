@@ -50,7 +50,8 @@ class FrameResult:
 class Inspector:
     def __init__(self, detector=ROOT / "models" / "detector.pt",
                  classifier=ROOT / "models" / "classifier.pt",
-                 det_conf=0.35, damaged_thr=0.6, ok_thr=0.6, device=None):
+                 det_conf=0.35, damaged_thr=0.6, ok_thr=0.6, device=None,
+                 classify_types=("manhole",)):
         """damaged_thr / ok_thr — пороги уверенности классификатора.
         Между ними объект получает статус «Требует проверки»."""
         from ultralytics import YOLO
@@ -59,6 +60,9 @@ class Inspector:
         self.cls = YOLO(str(classifier)) if Path(classifier).exists() else None
         self.det_conf, self.damaged_thr, self.ok_thr = det_conf, damaged_thr, ok_thr
         self.device = device
+        # классификатор состояния обучен только на этих типах объектов;
+        # для остальных статус «Не определено», пока нет размеченных данных
+        self.classify_types = set(classify_types)
         if self.cls is not None:
             names = {v: k for k, v in self.cls.names.items()}
             self._dmg_idx = names["damaged"]
@@ -79,8 +83,10 @@ class Inspector:
             metas.append((obj, float(conf), [int(x1), int(y1), int(x2), int(y2)]))
 
         probs = [None] * len(crops)
-        if self.cls is not None and crops:
-            for i, r in enumerate(self.cls.predict(crops, device=self.device, verbose=False)):
+        idx = [i for i, m in enumerate(metas) if m[0] in self.classify_types]
+        if self.cls is not None and idx:
+            res = self.cls.predict([crops[i] for i in idx], device=self.device, verbose=False)
+            for i, r in zip(idx, res):
                 probs[i] = float(r.probs.data[self._dmg_idx])
 
         objects = []
